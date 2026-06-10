@@ -1,0 +1,29 @@
+# Roblox Place Files
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Rojo build output
+build/
+
+# Wally packages
+Packages/
+wally.lock
+
+# Rokit
+.rokit/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Selene
+selene.toml
+
+# Sourcemap
+sourcemap.json
