@@ -22,10 +22,11 @@ if playerGui:FindFirstChild("IndoVerseDanceGui") then playerGui.IndoVerseDanceGu
 local animationAssets = ReplicatedStorage:WaitForChild("AnimationAssets")
 local DanceModule = require(animationAssets:WaitForChild("DanceModule"))
 
-local COLOR_BG = Color3.fromRGB(255, 255, 255)
-local COLOR_STROKE = Color3.fromRGB(220, 220, 220)
-local COLOR_TEXT_MAIN = Color3.fromRGB(60, 60, 60)
-local COLOR_BLACK = Color3.fromRGB(0, 0, 0) 
+local COLOR_BG = Color3.fromRGB(20, 20, 28)
+local COLOR_STROKE = Color3.fromRGB(44, 44, 60)
+local COLOR_TEXT_MAIN = Color3.fromRGB(245, 245, 250)
+local COLOR_BTN_BG = Color3.fromRGB(30, 30, 42)
+local COLOR_BTN_HOVER = Color3.fromRGB(38, 38, 54)
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "IndoVerseDanceGui"
@@ -61,7 +62,7 @@ floatingStop.Position = UDim2.new(0.5, -60, 1, 50)
 floatingStop.BackgroundColor3 = COLOR_BG
 floatingStop.Text = "Stop Animasi"
 floatingStop.Font = Enum.Font.Gotham 
-floatingStop.TextColor3 = COLOR_BLACK 
+floatingStop.TextColor3 = COLOR_TEXT_MAIN 
 floatingStop.TextStrokeTransparency = 1 
 floatingStop.TextSize = 11
 floatingStop.Parent = gui
@@ -89,7 +90,7 @@ panelStroke.Thickness = 2
 local titleLbl = Instance.new("TextLabel", mainPanel)
 titleLbl.Size = UDim2.new(1, 0, 0, 35)
 titleLbl.BackgroundTransparency = 1
-titleLbl.Text = "?? DANCE & EMOTE"
+titleLbl.Text = "✨ DANCE MENU ✨"
 titleLbl.Font = Enum.Font.GothamBold
 titleLbl.TextColor3 = COLOR_TEXT_MAIN
 titleLbl.TextSize = 12
@@ -236,13 +237,24 @@ end)
 
 local function CreateDanceButton(nama, animID)
 	local btn = Instance.new("TextButton", scrollFrame)
-	btn.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+	btn.BackgroundColor3 = COLOR_BTN_BG
 	btn.Text = nama
 	btn.Font = Enum.Font.GothamMedium
 	btn.TextColor3 = COLOR_TEXT_MAIN
 	btn.TextSize = 9
 	btn.TextWrapped = true
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+	
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Color = COLOR_STROKE
+	stroke.Thickness = 1
+
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = COLOR_BTN_HOVER}):Play()
+	end)
+	btn.MouseLeave:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = COLOR_BTN_BG}):Play()
+	end)
 
 	btn.MouseButton1Click:Connect(function()
 		local char = player.Character
