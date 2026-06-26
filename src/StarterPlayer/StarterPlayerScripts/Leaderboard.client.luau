@@ -52,12 +52,12 @@ local isLbOpen = false
 local lbTitle = Instance.new("TextLabel", lbContainer)
 lbTitle.Size = UDim2.new(1, 0, 0, 45)
 lbTitle.BackgroundTransparency = 1
-lbTitle.Text = "✨ CLUB LEADERBOARD ✨"
+lbTitle.Text = "✨ TOP DONATUR ✨"
 lbTitle.Font = Enum.Font.GothamBlack
 lbTitle.TextColor3 = COLOR_TEXT
 lbTitle.TextSize = 16
 
--- Header Labels (Rank, Name, Level, Coins)
+-- Header Labels (Rank, Name, Donated)
 local headerBar = Instance.new("Frame", lbContainer)
 headerBar.Size = UDim2.new(1, -20, 0, 20)
 headerBar.Position = UDim2.new(0, 10, 0, 45)
@@ -73,7 +73,7 @@ hRank.TextSize = 10
 hRank.TextXAlignment = Enum.TextXAlignment.Left
 
 local hName = Instance.new("TextLabel", headerBar)
-hName.Size = UDim2.new(0.4, 0, 1, 0)
+hName.Size = UDim2.new(0.55, -5, 1, 0)
 hName.Position = UDim2.new(0.15, 5, 0, 0)
 hName.BackgroundTransparency = 1
 hName.Text = "Name"
@@ -82,25 +82,15 @@ hName.TextColor3 = COLOR_TEXT_DIM
 hName.TextSize = 10
 hName.TextXAlignment = Enum.TextXAlignment.Left
 
-local hLvl = Instance.new("TextLabel", headerBar)
-hLvl.Size = UDim2.new(0.2, 0, 1, 0)
-hLvl.Position = UDim2.new(0.55, 0, 0, 0)
-hLvl.BackgroundTransparency = 1
-hLvl.Text = "Level"
-hLvl.Font = Enum.Font.GothamBold
-hLvl.TextColor3 = COLOR_TEXT_DIM
-hLvl.TextSize = 10
-hLvl.TextXAlignment = Enum.TextXAlignment.Left
-
-local hKoin = Instance.new("TextLabel", headerBar)
-hKoin.Size = UDim2.new(0.25, 0, 1, 0)
-hKoin.Position = UDim2.new(0.75, 0, 0, 0)
-hKoin.BackgroundTransparency = 1
-hKoin.Text = "Coins"
-hKoin.Font = Enum.Font.GothamBold
-hKoin.TextColor3 = COLOR_TEXT_DIM
-hKoin.TextSize = 10
-hKoin.TextXAlignment = Enum.TextXAlignment.Right
+local hDonated = Instance.new("TextLabel", headerBar)
+hDonated.Size = UDim2.new(0.3, -5, 1, 0)
+hDonated.Position = UDim2.new(0.7, 0, 0, 0)
+hDonated.BackgroundTransparency = 1
+hDonated.Text = "Robux"
+hDonated.Font = Enum.Font.GothamBold
+hDonated.TextColor3 = COLOR_TEXT_DIM
+hDonated.TextSize = 10
+hDonated.TextXAlignment = Enum.TextXAlignment.Right
 
 -- Scrolling Area
 local lbScrolling = Instance.new("ScrollingFrame", lbContainer)
@@ -127,7 +117,7 @@ local function FormatNumber(n)
 	return formatted
 end
 
-local function BuatPlayerBar(p, koin, level, rank)
+local function BuatPlayerBar(p, donated, rank)
 	local bar = Instance.new("Frame")
 	bar.Name = p.Name
 	bar.Size = UDim2.new(1, -6, 0, 35)
@@ -180,7 +170,7 @@ local function BuatPlayerBar(p, koin, level, rank)
 	rankLbl.TextXAlignment = Enum.TextXAlignment.Left
 
 	local nameLbl = Instance.new("TextLabel", bar)
-	nameLbl.Size = UDim2.new(0.4, -5, 1, 0)
+	nameLbl.Size = UDim2.new(0.55, -5, 1, 0)
 	nameLbl.Position = UDim2.new(0.15, 5, 0, 0)
 	nameLbl.BackgroundTransparency = 1
 	nameLbl.Text = p.DisplayName
@@ -190,25 +180,15 @@ local function BuatPlayerBar(p, koin, level, rank)
 	nameLbl.TextXAlignment = Enum.TextXAlignment.Left
 	nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
 
-	local lvlLbl = Instance.new("TextLabel", bar)
-	lvlLbl.Size = UDim2.new(0.2, 0, 1, 0)
-	lvlLbl.Position = UDim2.new(0.55, 0, 0, 0)
-	lvlLbl.BackgroundTransparency = 1
-	lvlLbl.Text = "Lv. " .. level
-	lvlLbl.Font = Enum.Font.GothamBold
-	lvlLbl.TextColor3 = COLOR_GOLD
-	lvlLbl.TextSize = 10
-	lvlLbl.TextXAlignment = Enum.TextXAlignment.Left
-
-	local koinLbl = Instance.new("TextLabel", bar)
-	koinLbl.Size = UDim2.new(0.25, -5, 1, 0)
-	koinLbl.Position = UDim2.new(0.75, 0, 0, 0)
-	koinLbl.BackgroundTransparency = 1
-	koinLbl.Text = FormatNumber(koin)
-	koinLbl.Font = Enum.Font.GothamBold
-	koinLbl.TextColor3 = Color3.fromRGB(46, 204, 113)
-	koinLbl.TextSize = 11
-	koinLbl.TextXAlignment = Enum.TextXAlignment.Right
+	local donatedLbl = Instance.new("TextLabel", bar)
+	donatedLbl.Size = UDim2.new(0.3, -5, 1, 0)
+	donatedLbl.Position = UDim2.new(0.7, 0, 0, 0)
+	donatedLbl.BackgroundTransparency = 1
+	donatedLbl.Text = "R$ " .. FormatNumber(donated)
+	donatedLbl.Font = Enum.Font.GothamBold
+	donatedLbl.TextColor3 = COLOR_GOLD
+	donatedLbl.TextSize = 11
+	donatedLbl.TextXAlignment = Enum.TextXAlignment.Right
 
 	return bar
 end
@@ -223,29 +203,45 @@ local function UpdateLeaderboard()
 	local playerList = {}
 	for _, p in pairs(Players:GetPlayers()) do
 		local ls = p:FindFirstChild("leaderstats")
-		local koin = ls and ls:FindFirstChild("Koin") and ls.Koin.Value or 0
-		local level = ls and ls:FindFirstChild("Level") and ls.Level.Value or 1
-		table.insert(playerList, {Player = p, Koin = koin, Level = level})
+		local donated = ls and ls:FindFirstChild("Donated") and ls.Donated.Value or 0
+		table.insert(playerList, {Player = p, Donated = donated})
 	end
 	
 	table.sort(playerList, function(a, b)
-		return a.Koin > b.Koin
+		return a.Donated > b.Donated
 	end)
 	
 	for i = 1, math.min(#playerList, 15) do
-		local bar = BuatPlayerBar(playerList[i].Player, playerList[i].Koin, playerList[i].Level, i)
+		local bar = BuatPlayerBar(playerList[i].Player, playerList[i].Donated, i)
 		bar.Parent = lbScrolling
 	end
 end
 
-local koinVal = lstats:WaitForChild("Koin")
-local levelVal = lstats:WaitForChild("Level")
+local donatedVal = lstats:WaitForChild("Donated")
+
+local function ConnectPlayerStats(p)
+	task.spawn(function()
+		local ls = p:WaitForChild("leaderstats", 5)
+		if ls then
+			local donated = ls:WaitForChild("Donated", 5)
+			if donated then
+				donated.Changed:Connect(UpdateLeaderboard)
+				UpdateLeaderboard()
+			end
+		end
+	end)
+end
 
 UpdateLeaderboard()
-Players.PlayerAdded:Connect(UpdateLeaderboard)
+Players.PlayerAdded:Connect(ConnectPlayerStats)
 Players.PlayerRemoving:Connect(UpdateLeaderboard)
-koinVal.Changed:Connect(UpdateLeaderboard)
-levelVal.Changed:Connect(UpdateLeaderboard)
+donatedVal.Changed:Connect(UpdateLeaderboard)
+
+for _, p in ipairs(Players:GetPlayers()) do
+	if p ~= player then
+		ConnectPlayerStats(p)
+	end
+end
 
 
 -- Automatic periodic refresh

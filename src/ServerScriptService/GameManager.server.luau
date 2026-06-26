@@ -33,27 +33,10 @@ local function onPlayerAdded(player: Player)
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
 
-	local score = Instance.new("IntValue")
-	score.Name = "Score"
-	score.Value = 0
-	score.Parent = leaderstats
-
-	local playtime = Instance.new("IntValue")
-	playtime.Name = "Playtime"
-	playtime.Value = 0
-	playtime.Parent = leaderstats
-
-	local koin = Instance.new("IntValue")
-	koin.Name = "Koin"
-	koin.Value = 100 -- starting coins
-	koin.Parent = leaderstats
-
-	local level = Instance.new("IntValue")
-	level.Name = "Level"
-	level.Value = 1 -- starting level
-	level.Parent = leaderstats
-
-
+	local donated = Instance.new("IntValue")
+	donated.Name = "Donated"
+	donated.Value = 0 -- initial Robux donation amount
+	donated.Parent = leaderstats
 
 	-- Kirim pesan selamat datang
 	Utils.log(`Pemain {player.Name} berhasil terhubung!`)
@@ -74,21 +57,5 @@ end
 -- Connect events
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
-
--- Update playtime setiap 60 detik
-task.spawn(function()
-	while true do
-		task.wait(60)
-		for player, data in pairs(playerData) do
-			local leaderstats = player:FindFirstChild("leaderstats")
-			if leaderstats then
-				local playtime = leaderstats:FindFirstChild("Playtime")
-				if playtime then
-					playtime.Value += 1
-				end
-			end
-		end
-	end
-end)
 
 print("[Server] GameManager berhasil dimuat!")
