@@ -193,13 +193,53 @@ local function updateAllPlayerNametags()
 					end
 				end
 				
-				-- Render the single active rank band
+				-- Render Device + Country Icon row (top!)
+				local iconsFrame = Instance.new("Frame")
+				iconsFrame.Name = "IconsFrame"
+				iconsFrame.Size = UDim2.new(1, 0, 0, 16)
+				iconsFrame.BackgroundTransparency = 1
+				iconsFrame.LayoutOrder = 1 -- Very top
+				
+				local iconsLayout = Instance.new("UIListLayout")
+				iconsLayout.FillDirection = Enum.FillDirection.Horizontal
+				iconsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+				iconsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+				iconsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+				iconsLayout.Padding = UDim.new(0, 6)
+				iconsLayout.Parent = iconsFrame
+				
+				-- Country flag image
+				local flagImageId = p:GetAttribute("CountryFlagImage") or "rbxassetid://10600124318" -- Globe icon fallback
+				local flagImg = Instance.new("ImageLabel", iconsFrame)
+				flagImg.Size = UDim2.new(0, 16, 0, 16)
+				flagImg.BackgroundTransparency = 1
+				flagImg.Image = flagImageId
+				flagImg.LayoutOrder = 1
+				
+				-- Device icon image
+				local deviceType = p:GetAttribute("DeviceType") or "PC"
+				local deviceImageId = "rbxassetid://10600122394" -- PC / computer monitor
+				if deviceType == "Mobile" then
+					deviceImageId = "rbxassetid://10600122285" -- phone
+				elseif deviceType == "Console" then
+					deviceImageId = "rbxassetid://10600122774" -- controller
+				end
+				
+				local deviceImg = Instance.new("ImageLabel", iconsFrame)
+				deviceImg.Size = UDim2.new(0, 16, 0, 16)
+				deviceImg.BackgroundTransparency = 1
+				deviceImg.Image = deviceImageId
+				deviceImg.LayoutOrder = 2
+				
+				iconsFrame.Parent = nametag
+				
+				-- Render the single active rank band (middle!)
 				local band = Instance.new("Frame")
 				band.Name = "Band_" .. activeRank.Text
 				band.Size = UDim2.new(0, 120, 0, 18)
 				band.BackgroundColor3 = activeRank.BgColor
 				band.BorderSizePixel = 0
-				band.LayoutOrder = 1
+				band.LayoutOrder = 2 -- Below icons
 				
 				local uiGradient = Instance.new("UIGradient", band)
 				uiGradient.Transparency = NumberSequence.new({
@@ -222,50 +262,6 @@ local function updateAllPlayerNametags()
 				
 				band.Parent = nametag
 				
-				-- Render Device + Country Icon row (middle)
-				local iconsFrame = Instance.new("Frame")
-				iconsFrame.Name = "IconsFrame"
-				iconsFrame.Size = UDim2.new(1, 0, 0, 16)
-				iconsFrame.BackgroundTransparency = 1
-				iconsFrame.LayoutOrder = 2
-				
-				local iconsLayout = Instance.new("UIListLayout")
-				iconsLayout.FillDirection = Enum.FillDirection.Horizontal
-				iconsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-				iconsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-				iconsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-				iconsLayout.Padding = UDim.new(0, 6)
-				iconsLayout.Parent = iconsFrame
-				
-				-- Country flag
-				local flagEmoji = p:GetAttribute("CountryFlag") or "🌐"
-				local flagLbl = Instance.new("TextLabel", iconsFrame)
-				flagLbl.Size = UDim2.new(0, 20, 1, 0)
-				flagLbl.BackgroundTransparency = 1
-				flagLbl.Text = flagEmoji
-				flagLbl.Font = Enum.Font.GothamBold
-				flagLbl.TextSize = 12
-				flagLbl.LayoutOrder = 1
-				
-				-- Device icon
-				local deviceType = p:GetAttribute("DeviceType") or "PC"
-				local deviceEmoji = "💻"
-				if deviceType == "Mobile" then
-					deviceEmoji = "📱"
-				elseif deviceType == "Console" then
-					deviceEmoji = "🎮"
-				end
-				
-				local deviceLbl = Instance.new("TextLabel", iconsFrame)
-				deviceLbl.Size = UDim2.new(0, 20, 1, 0)
-				deviceLbl.BackgroundTransparency = 1
-				deviceLbl.Text = deviceEmoji
-				deviceLbl.Font = Enum.Font.GothamBold
-				deviceLbl.TextSize = 12
-				deviceLbl.LayoutOrder = 2
-				
-				iconsFrame.Parent = nametag
-				
 				-- Render NameLabel at the bottom
 				local nameLabel = Instance.new("TextLabel")
 				nameLabel.Name = "NameLabel"
@@ -278,30 +274,44 @@ local function updateAllPlayerNametags()
 				nameLabel.TextStrokeTransparency = 0.5
 				nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 				nameLabel.Text = p.DisplayName
-				nameLabel.LayoutOrder = 100 -- Always at bottom
+				nameLabel.LayoutOrder = 3 -- Below rank band
 				nameLabel.Parent = nametag
 			end
 		end
 	end
 end
 
--- Helper to detect player's country using LocalizationService and convert to flag emoji
+local FLAG_IMAGES = {
+	ID = "rbxassetid://182260742",
+	MY = "rbxassetid://182260750",
+	SG = "rbxassetid://182260762",
+	TH = "rbxassetid://182260768",
+	PH = "rbxassetid://182260756",
+	VN = "rbxassetid://182260770",
+	US = "rbxassetid://182260775",
+	GB = "rbxassetid://182260778",
+	UK = "rbxassetid://182260778",
+	AU = "rbxassetid://182260714",
+	CA = "rbxassetid://182260721",
+	JP = "rbxassetid://182260746",
+	KR = "rbxassetid://182260748",
+	CN = "rbxassetid://182260724",
+	IN = "rbxassetid://182260738",
+}
+
+-- Helper to detect player's country using LocalizationService and map to flag asset ID
 local function getPlayerCountryFlag(player: Player): string
 	local success, code = pcall(function()
 		return LocalizationService:GetCountryRegionForPlayerAsync(player)
 	end)
 	if success and code and #code == 2 then
 		code = string.upper(code)
-		local f1 = code:byte(1) - 65 + 0x1F1E6
-		local f2 = code:byte(2) - 65 + 0x1F1E6
-		local ok, emoji = pcall(function()
-			return utf8.char(f1) .. utf8.char(f2)
-		end)
-		if ok then
-			return emoji
+		local imageId = FLAG_IMAGES[code]
+		if imageId then
+			return imageId
 		end
 	end
-	return "🌐"
+	return "rbxassetid://10600124318" -- Globe icon fallback
 end
 
 -- Fungsi ketika pemain bergabung
@@ -314,10 +324,10 @@ local function onPlayerAdded(player: Player)
 		score = 0,
 	}
 	
-	-- Fetch country region flag emoji asynchronously
+	-- Fetch country region flag image asynchronously
 	task.spawn(function()
-		local flag = getPlayerCountryFlag(player)
-		player:SetAttribute("CountryFlag", flag)
+		local flagImage = getPlayerCountryFlag(player)
+		player:SetAttribute("CountryFlagImage", flagImage)
 		updateAllPlayerNametags()
 	end)
 
