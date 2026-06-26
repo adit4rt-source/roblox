@@ -174,37 +174,35 @@ local function updateAllPlayerNametags()
 					end
 				end
 				
-				-- Render new styled Rank Pills
+				-- Render new styled Rank Gradient Bands
 				for i, rank in ipairs(activeRanks) do
-					local pill = Instance.new("Frame")
-					pill.Name = "Pill_" .. rank.Text
-					pill.AutomaticSize = Enum.AutomaticSize.X
-					pill.Size = UDim2.new(0, 0, 0, 18)
-					pill.BackgroundColor3 = rank.BgColor
-					pill.LayoutOrder = i
+					local band = Instance.new("Frame")
+					band.Name = "Band_" .. rank.Text
+					band.Size = UDim2.new(0, 120, 0, 18)
+					band.BackgroundColor3 = rank.BgColor
+					band.BorderSizePixel = 0
+					band.LayoutOrder = i
 					
-					local pillCorner = Instance.new("UICorner", pill)
-					pillCorner.CornerRadius = UDim.new(1, 0) -- Perfect pill
+					local uiGradient = Instance.new("UIGradient", band)
+					uiGradient.Transparency = NumberSequence.new({
+						NumberSequenceKeypoint.new(0, 1),       -- Fully transparent at left
+						NumberSequenceKeypoint.new(0.2, 0.15),   -- Mostly opaque at 20%
+						NumberSequenceKeypoint.new(0.8, 0.15),   -- Mostly opaque at 80%
+						NumberSequenceKeypoint.new(1, 1)        -- Fully transparent at right
+					})
 					
-					local pillStroke = Instance.new("UIStroke", pill)
-					pillStroke.Color = rank.BorderColor
-					pillStroke.Thickness = 1.5
-					
-					local pillPadding = Instance.new("UIPadding", pill)
-					pillPadding.PaddingLeft = UDim.new(0, 8)
-					pillPadding.PaddingRight = UDim.new(0, 8)
-					
-					local label = Instance.new("TextLabel", pill)
-					label.Size = UDim2.new(0, 0, 1, 0)
-					label.AutomaticSize = Enum.AutomaticSize.X
+					local label = Instance.new("TextLabel", band)
+					label.Size = UDim2.new(1, 0, 1, 0)
 					label.BackgroundTransparency = 1
 					label.Text = rank.Text
 					label.Font = Enum.Font.GothamBold
 					label.TextColor3 = rank.TextColor
 					label.TextSize = 10
-					label.Parent = pill
+					label.TextStrokeTransparency = 0.7
+					label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+					label.Parent = band
 					
-					pill.Parent = nametag
+					band.Parent = nametag
 				end
 				
 				-- Render NameLabel at the bottom
