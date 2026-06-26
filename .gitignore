@@ -31,3 +31,9 @@ sourcemap.json
 # Local binaries
 bin/
 
+# Node.js dependencies
+node_modules/
+package.json
+package-lock.json
+
+
