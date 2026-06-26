@@ -254,10 +254,45 @@ local artStroke = Instance.new("UIStroke", artCover)
 artStroke.Color = COLOR_STROKE
 artStroke.Thickness = 1.5
 
+-- Client Audio Visualizer Frame Setup
+local visualizerFrame = Instance.new("Frame", pNowPlaying)
+visualizerFrame.Name = "VisualizerFrame"
+visualizerFrame.Size = UDim2.new(1, 0, 0, 16)
+visualizerFrame.Position = UDim2.new(0, 0, 0, 163)
+visualizerFrame.BackgroundTransparency = 1
+
+local visLayout = Instance.new("UIListLayout", visualizerFrame)
+visLayout.FillDirection = Enum.FillDirection.Horizontal
+visLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+visLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+visLayout.Padding = UDim.new(0, 3)
+
+local visBars = {}
+local numBars = 12
+for i = 1, numBars do
+	local bar = Instance.new("Frame", visualizerFrame)
+	bar.Name = "Bar_" .. i
+	bar.Size = UDim2.new(0, 4, 0, 2) -- Start at minimum height
+	bar.BackgroundColor3 = COLOR_NEON
+	bar.BorderSizePixel = 0
+	
+	local barCorner = Instance.new("UICorner", bar)
+	barCorner.CornerRadius = UDim.new(1, 0)
+	
+	local barGrad = Instance.new("UIGradient", bar)
+	barGrad.Rotation = 90
+	barGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 255)), -- Pink top
+		ColorSequenceKeypoint.new(1, COLOR_NEON) -- Purple bottom
+	})
+	
+	table.insert(visBars, bar)
+end
+
 -- Metadata details
 local nowPlayingSub = Instance.new("TextLabel", pNowPlaying)
 nowPlayingSub.Size = UDim2.new(1, 0, 0, 18)
-nowPlayingSub.Position = UDim2.new(0, 0, 0, 170)
+nowPlayingSub.Position = UDim2.new(0, 0, 0, 182)
 nowPlayingSub.BackgroundTransparency = 1
 nowPlayingSub.Text = "NOW PLAYING"
 nowPlayingSub.Font = Enum.Font.GothamBold
@@ -266,7 +301,7 @@ nowPlayingSub.TextSize = 9
 
 local songTitleLbl = Instance.new("TextLabel", pNowPlaying)
 songTitleLbl.Size = UDim2.new(1, 0, 0, 20)
-songTitleLbl.Position = UDim2.new(0, 0, 0, 190)
+songTitleLbl.Position = UDim2.new(0, 0, 0, 200)
 songTitleLbl.BackgroundTransparency = 1
 songTitleLbl.Text = "Not Playing Background Music"
 songTitleLbl.Font = Enum.Font.GothamBlack
@@ -276,7 +311,7 @@ songTitleLbl.TextTruncate = Enum.TextTruncate.AtEnd
 
 local playlistNameLbl = Instance.new("TextLabel", pNowPlaying)
 playlistNameLbl.Size = UDim2.new(1, 0, 0, 15)
-playlistNameLbl.Position = UDim2.new(0, 0, 0, 210)
+playlistNameLbl.Position = UDim2.new(0, 0, 0, 220)
 playlistNameLbl.BackgroundTransparency = 1
 playlistNameLbl.Text = "Playlist: None"
 playlistNameLbl.Font = Enum.Font.GothamMedium
@@ -285,7 +320,7 @@ playlistNameLbl.TextSize = 10
 
 local queuedByLbl = Instance.new("TextLabel", pNowPlaying)
 queuedByLbl.Size = UDim2.new(1, 0, 0, 15)
-queuedByLbl.Position = UDim2.new(0, 0, 0, 225)
+queuedByLbl.Position = UDim2.new(0, 0, 0, 235)
 queuedByLbl.BackgroundTransparency = 1
 queuedByLbl.Text = "Queued by: SYSTEM"
 queuedByLbl.Font = Enum.Font.GothamMedium
@@ -295,7 +330,7 @@ queuedByLbl.TextSize = 10
 -- Progress Bar Section
 local progressFrame = Instance.new("Frame", pNowPlaying)
 progressFrame.Size = UDim2.new(1, -20, 0, 15)
-progressFrame.Position = UDim2.new(0, 10, 0, 255)
+progressFrame.Position = UDim2.new(0, 10, 0, 260)
 progressFrame.BackgroundTransparency = 1
 
 local countStart = Instance.new("TextLabel", progressFrame)
@@ -925,18 +960,36 @@ local function syncQueueList(queueList)
 	end
 end
 
--- Heartbeat loop to update Now Playing progress bar
+-- Heartbeat loop to update Now Playing progress bar & visualizer
 RunService.Heartbeat:Connect(function()
-	if not currentSongData then return end
+	-- 1. Update progress bar
+	if currentSongData then
+		local elapsed = Workspace:GetServerTimeNow() - currentSongData.StartTime
+		elapsed = math.max(0, math.min(elapsed, currentSongData.Duration))
+		
+		countStart.Text = formatTime(elapsed)
+		countEnd.Text = formatTime(currentSongData.Duration)
+		
+		local pct = currentSongData.Duration > 0 and (elapsed / currentSongData.Duration) or 0
+		progressBarFill.Size = UDim2.new(pct, 0, 1, 0)
+	end
 	
-	local elapsed = Workspace:GetServerTimeNow() - currentSongData.StartTime
-	elapsed = math.max(0, math.min(elapsed, currentSongData.Duration))
+	-- 2. Update visualizer bars based on PlaybackLoudness
+	local t = os.clock()
+	local loudness = 0
+	if activeLocalSound and activeLocalSound.IsPlaying then
+		loudness = math.clamp(activeLocalSound.PlaybackLoudness / 350, 0, 1)
+	end
 	
-	countStart.Text = formatTime(elapsed)
-	countEnd.Text = formatTime(currentSongData.Duration)
-	
-	local pct = currentSongData.Duration > 0 and (elapsed / currentSongData.Duration) or 0
-	progressBarFill.Size = UDim2.new(pct, 0, 1, 0)
+	for i, bar in ipairs(visBars) do
+		local height = 2
+		if loudness > 0 then
+			-- Calculate individual wave height using sine and noise-like patterns
+			local wave = 0.4 + 0.6 * math.sin(t * 12 + (i * 0.8))
+			height = math.clamp(loudness * 16 * wave, 2, 16)
+		end
+		bar.Size = UDim2.new(0, 4, 0, height)
+	end
 end)
 
 -- Setup Remote Event Sync
