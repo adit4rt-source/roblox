@@ -1,0 +1,43 @@
+{
+    "ClassName": "ScreenGui",
+    "Name": "Topbar",
+    "Parent": "StarterGui",
+    "ResetOnSpawn": false,
+    "Children": [
+        {
+            "ClassName": "Frame",
+            "Name": "TopbarFrame",
+            "BackgroundColor3": [0.1, 0.1, 0.1],
+            "BorderSizePixel": 0,
+            "Position": [0, 0],
+            "Size": [200, 40],
+            "ZIndex": 10,
+            "Children": [
+                {
+                    "ClassName": "TextLabel",
+                    "Name": "TitleLabel",
+                    "Text": "Game Title",
+                    "TextColor3": [1, 1, 1],
+                    "TextScaled": true,
+                    "Font": "SourceSansBold",
+                    "BackgroundTransparency": 1,
+                    "Position": [10, 0],
+                    "Size": [180, 40],
+                    "ZIndex": 11
+                },
+                {
+                    "ClassName": "TextButton",
+                    "Name": "CloseButton",
+                    "Text": "X",
+                    "TextColor3": [1, 0, 0],
+                    "TextScaled": true,
+                    "Font": "SourceSansBold",
+                    "BackgroundTransparency": 1,
+                    "Position": [180, 0],
+                    "Size": [20, 40],
+                    "ZIndex": 12
+                }
+            ]
+        }
+    ]
+}
