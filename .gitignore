@@ -27,3 +27,7 @@ selene.toml
 
 # Sourcemap
 sourcemap.json
+
+# Local binaries
+bin/
+
