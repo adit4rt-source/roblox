@@ -83,7 +83,7 @@ MusicDatabase.Tracks = {
 		Duration = 180
 	},
 	{
-		Id = 9043887071,
+		Id = 1837879005,
 		Title = "Nightclub Anthem",
 		Artist = "Monstercat",
 		Playlist = "EDM",
@@ -91,7 +91,7 @@ MusicDatabase.Tracks = {
 		Duration = 150
 	},
 	{
-		Id = 9046863116,
+		Id = 1837879006,
 		Title = "Synthwave Neon",
 		Artist = "RetroSound",
 		Playlist = "EDM",
@@ -99,7 +99,7 @@ MusicDatabase.Tracks = {
 		Duration = 165
 	},
 	{
-		Id = 9040014022,
+		Id = 1837879007,
 		Title = "Lofi Vibes",
 		Artist = "ChillMaster",
 		Playlist = "SLOWMIX",
@@ -107,7 +107,7 @@ MusicDatabase.Tracks = {
 		Duration = 142
 	},
 	{
-		Id = 9040015099,
+		Id = 1837879008,
 		Title = "Late Night Rain",
 		Artist = "SlowMixer",
 		Playlist = "SLOWMIX",
@@ -115,7 +115,7 @@ MusicDatabase.Tracks = {
 		Duration = 190
 	},
 	{
-		Id = 9040016022,
+		Id = 1837879009,
 		Title = "Tokyo Drift Style",
 		Artist = "AsianBeats",
 		Playlist = "ASIAN & MANYAO",
@@ -123,7 +123,7 @@ MusicDatabase.Tracks = {
 		Duration = 155
 	},
 	{
-		Id = 9040017055,
+		Id = 1837879010,
 		Title = "Manyao Club Dance",
 		Artist = "DJ Manyao",
 		Playlist = "ASIAN & MANYAO",

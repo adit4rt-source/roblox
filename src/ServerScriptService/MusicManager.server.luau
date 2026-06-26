@@ -62,7 +62,9 @@ end
 -- Stop current watchdog and sound
 local function cleanupCurrentPlayback()
 	if watchdogThread then
-		task.cancel(watchdogThread)
+		if coroutine.status(watchdogThread) ~= "dead" then
+			task.cancel(watchdogThread)
+		end
 		watchdogThread = nil
 	end
 	if serverSound then
