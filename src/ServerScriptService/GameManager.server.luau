@@ -33,10 +33,10 @@ local function onPlayerAdded(player: Player)
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
 
-	local donated = Instance.new("IntValue")
-	donated.Name = "Donated"
-	donated.Value = 0 -- initial Robux donation amount
-	donated.Parent = leaderstats
+	local spent = Instance.new("IntValue")
+	spent.Name = "Spent"
+	spent.Value = 0 -- initial Robux spent amount
+	spent.Parent = leaderstats
 
 	-- Kirim pesan selamat datang
 	Utils.log(`Pemain {player.Name} berhasil terhubung!`)

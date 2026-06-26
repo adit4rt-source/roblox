@@ -52,12 +52,12 @@ local isLbOpen = false
 local lbTitle = Instance.new("TextLabel", lbContainer)
 lbTitle.Size = UDim2.new(1, 0, 0, 45)
 lbTitle.BackgroundTransparency = 1
-lbTitle.Text = "✨ TOP DONATUR ✨"
+lbTitle.Text = "✨ TOP SPENDER ✨"
 lbTitle.Font = Enum.Font.GothamBlack
 lbTitle.TextColor3 = COLOR_TEXT
 lbTitle.TextSize = 16
 
--- Header Labels (Rank, Name, Donated)
+-- Header Labels (Rank, Name, Spent)
 local headerBar = Instance.new("Frame", lbContainer)
 headerBar.Size = UDim2.new(1, -20, 0, 20)
 headerBar.Position = UDim2.new(0, 10, 0, 45)
@@ -82,15 +82,15 @@ hName.TextColor3 = COLOR_TEXT_DIM
 hName.TextSize = 10
 hName.TextXAlignment = Enum.TextXAlignment.Left
 
-local hDonated = Instance.new("TextLabel", headerBar)
-hDonated.Size = UDim2.new(0.3, -5, 1, 0)
-hDonated.Position = UDim2.new(0.7, 0, 0, 0)
-hDonated.BackgroundTransparency = 1
-hDonated.Text = "Robux"
-hDonated.Font = Enum.Font.GothamBold
-hDonated.TextColor3 = COLOR_TEXT_DIM
-hDonated.TextSize = 10
-hDonated.TextXAlignment = Enum.TextXAlignment.Right
+local hSpent = Instance.new("TextLabel", headerBar)
+hSpent.Size = UDim2.new(0.3, -5, 1, 0)
+hSpent.Position = UDim2.new(0.7, 0, 0, 0)
+hSpent.BackgroundTransparency = 1
+hSpent.Text = "Spent"
+hSpent.Font = Enum.Font.GothamBold
+hSpent.TextColor3 = COLOR_TEXT_DIM
+hSpent.TextSize = 10
+hSpent.TextXAlignment = Enum.TextXAlignment.Right
 
 -- Scrolling Area
 local lbScrolling = Instance.new("ScrollingFrame", lbContainer)
@@ -117,7 +117,7 @@ local function FormatNumber(n)
 	return formatted
 end
 
-local function BuatPlayerBar(p, donated, rank)
+local function BuatPlayerBar(p, spent, rank)
 	local bar = Instance.new("Frame")
 	bar.Name = p.Name
 	bar.Size = UDim2.new(1, -6, 0, 35)
@@ -180,15 +180,15 @@ local function BuatPlayerBar(p, donated, rank)
 	nameLbl.TextXAlignment = Enum.TextXAlignment.Left
 	nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
 
-	local donatedLbl = Instance.new("TextLabel", bar)
-	donatedLbl.Size = UDim2.new(0.3, -5, 1, 0)
-	donatedLbl.Position = UDim2.new(0.7, 0, 0, 0)
-	donatedLbl.BackgroundTransparency = 1
-	donatedLbl.Text = "R$ " .. FormatNumber(donated)
-	donatedLbl.Font = Enum.Font.GothamBold
-	donatedLbl.TextColor3 = COLOR_GOLD
-	donatedLbl.TextSize = 11
-	donatedLbl.TextXAlignment = Enum.TextXAlignment.Right
+	local spentLbl = Instance.new("TextLabel", bar)
+	spentLbl.Size = UDim2.new(0.3, -5, 1, 0)
+	spentLbl.Position = UDim2.new(0.7, 0, 0, 0)
+	spentLbl.BackgroundTransparency = 1
+	spentLbl.Text = "R$ " .. FormatNumber(spent)
+	spentLbl.Font = Enum.Font.GothamBold
+	spentLbl.TextColor3 = COLOR_GOLD
+	spentLbl.TextSize = 11
+	spentLbl.TextXAlignment = Enum.TextXAlignment.Right
 
 	return bar
 end
@@ -203,29 +203,29 @@ local function UpdateLeaderboard()
 	local playerList = {}
 	for _, p in pairs(Players:GetPlayers()) do
 		local ls = p:FindFirstChild("leaderstats")
-		local donated = ls and ls:FindFirstChild("Donated") and ls.Donated.Value or 0
-		table.insert(playerList, {Player = p, Donated = donated})
+		local spent = ls and ls:FindFirstChild("Spent") and ls.Spent.Value or 0
+		table.insert(playerList, {Player = p, Spent = spent})
 	end
 	
 	table.sort(playerList, function(a, b)
-		return a.Donated > b.Donated
+		return a.Spent > b.Spent
 	end)
 	
 	for i = 1, math.min(#playerList, 15) do
-		local bar = BuatPlayerBar(playerList[i].Player, playerList[i].Donated, i)
+		local bar = BuatPlayerBar(playerList[i].Player, playerList[i].Spent, i)
 		bar.Parent = lbScrolling
 	end
 end
 
-local donatedVal = lstats:WaitForChild("Donated")
+local spentVal = lstats:WaitForChild("Spent")
 
 local function ConnectPlayerStats(p)
 	task.spawn(function()
 		local ls = p:WaitForChild("leaderstats", 5)
 		if ls then
-			local donated = ls:WaitForChild("Donated", 5)
-			if donated then
-				donated.Changed:Connect(UpdateLeaderboard)
+			local spent = ls:WaitForChild("Spent", 5)
+			if spent then
+				spent.Changed:Connect(UpdateLeaderboard)
 				UpdateLeaderboard()
 			end
 		end
@@ -235,7 +235,7 @@ end
 UpdateLeaderboard()
 Players.PlayerAdded:Connect(ConnectPlayerStats)
 Players.PlayerRemoving:Connect(UpdateLeaderboard)
-donatedVal.Changed:Connect(UpdateLeaderboard)
+spentVal.Changed:Connect(UpdateLeaderboard)
 
 for _, p in ipairs(Players:GetPlayers()) do
 	if p ~= player then

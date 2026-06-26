@@ -108,7 +108,7 @@ local function OpenMenu(tgtPlayer, clickPos)
 	targetPlayer = tgtPlayer
 	nameLbl.Text = tgtPlayer.DisplayName
 	local ls = tgtPlayer:FindFirstChild("leaderstats")
-	infoLbl.Text = "💸 Donated: R$ " .. (ls and ls:FindFirstChild("Donated") and ls.Donated.Value or 0)
+	infoLbl.Text = "💸 Spent: R$ " .. (ls and ls:FindFirstChild("Spent") and ls.Spent.Value or 0)
 
 	local friendFolder = player:FindFirstChild("FriendList")
 	if friendFolder and friendFolder:FindFirstChild(tostring(tgtPlayer.UserId)) then
