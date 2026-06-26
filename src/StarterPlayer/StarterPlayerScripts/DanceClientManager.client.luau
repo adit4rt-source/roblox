@@ -1,6 +1,5 @@
 -- ================================================================
---  DanceClientManager (LocalScript) - ULTIMATE VERSION
---  Sistem Sync Cerdas: Anti-Delay, Auto-Update, & Stop Sync UI
+--  DanceClientManager (LocalScript) - FAVORITES & LOCK-ON EDITION
 -- ================================================================
 
 local Players = game:GetService("Players")
@@ -21,6 +20,32 @@ if playerGui:FindFirstChild("IndoVerseDanceGui") then playerGui.IndoVerseDanceGu
 
 local animationAssets = ReplicatedStorage:WaitForChild("AnimationAssets")
 local DanceModule = require(animationAssets:WaitForChild("DanceModule"))
+
+-- SISTEM FAVORIT DANCE
+local favoriteDances = {}
+
+local function LoadFavorites()
+	local favStr = player:GetAttribute("DanceFavorites") or ""
+	favoriteDances = {}
+	if favStr ~= "" then
+		for id in string.gmatch(favStr, "([^,]+)") do
+			favoriteDances[id] = true
+		end
+	end
+end
+
+local function SaveFavorites()
+	local favList = {}
+	for id, _ in pairs(favoriteDances) do
+		table.insert(favList, id)
+	end
+	local favStr = table.concat(favList, ",")
+	player:SetAttribute("DanceFavorites", favStr)
+end
+
+-- Load awal
+LoadFavorites()
+player:GetAttributeChangedSignal("DanceFavorites"):Connect(LoadFavorites)
 
 local COLOR_BG = Color3.fromRGB(20, 20, 28)
 local COLOR_STROKE = Color3.fromRGB(44, 44, 60)
@@ -119,6 +144,7 @@ listLayout.CellPadding = UDim2.new(0, 6, 0, 6)
 -- ==========================================
 local currentTrack = nil
 local syncConnection = nil
+local leaveConnection = nil
 local renderSyncConnection = nil
 local currentSyncTarget = nil
 
@@ -145,6 +171,7 @@ local function StopDance()
 	currentSyncTarget = nil
 
 	if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
+	if leaveConnection then leaveConnection:Disconnect(); leaveConnection = nil end
 	if renderSyncConnection then renderSyncConnection:Disconnect(); renderSyncConnection = nil end
 
 	UnSyncEvent:FireServer()
@@ -199,8 +226,14 @@ local function ApplySync(targetChar)
 		end)
 
 	else
-		StopDance()
-		StarterGui:SetCore("SendNotification", {Title = "Selesai", Text = targetChar.Name .. " berhenti berjoget.", Duration = 3})
+		-- Tetap lock-on ke target, stop tari lokal saja
+		if currentTrack then currentTrack:Stop(0.2); currentTrack = nil end
+		UnSyncEvent:FireServer()
+		if player.Character then player.Character:SetAttribute("CurrentDanceID", nil) end
+
+		floatingStop.Text = "Stop Mengikuti"
+		ShowStopButton(true)
+		StarterGui:SetCore("SendNotification", {Title = "Menunggu", Text = "Menunggu " .. targetChar.Name .. " mulai berjoget kembali...", Duration = 3})
 	end
 end
 
@@ -223,37 +256,78 @@ reqSyncEvent.Event:Connect(function(targetPlayer)
 	end
 
 	currentSyncTarget = targetPlayer
-	floatingStop.Text = "Stop Mengikuti" -- UBAH TEKS TOMBOL
+	floatingStop.Text = "Stop Mengikuti"
 	ShowStopButton(true)
 
 	ApplySync(tgtChar)
 
-	-- MONITORING OTOMATIS: Jika teman ganti gaya, kita ikuti seketika!
 	if syncConnection then syncConnection:Disconnect() end
 	syncConnection = tgtChar:GetAttributeChangedSignal("CurrentDanceID"):Connect(function()
 		if currentSyncTarget == targetPlayer then ApplySync(tgtChar) end
 	end)
+
+	if leaveConnection then leaveConnection:Disconnect() end
+	leaveConnection = Players.PlayerRemoving:Connect(function(removedPlayer)
+		if removedPlayer == targetPlayer then
+			StopDance()
+		end
+	end)
 end)
 
-local function CreateDanceButton(nama, animID)
-	local btn = Instance.new("TextButton", scrollFrame)
-	btn.BackgroundColor3 = COLOR_BTN_BG
+local function CreateDanceButton(nama, animID, index)
+	local cell = Instance.new("Frame", scrollFrame)
+	cell.BackgroundColor3 = COLOR_BTN_BG
+	cell.Size = UDim2.new(0.5, -4, 0, 30)
+	Instance.new("UICorner", cell).CornerRadius = UDim.new(0, 5)
+	
+	local stroke = Instance.new("UIStroke", cell)
+	stroke.Color = COLOR_STROKE
+	stroke.Thickness = 1
+
+	local btn = Instance.new("TextButton", cell)
+	btn.Size = UDim2.new(1, -26, 1, 0)
+	btn.Position = UDim2.new(0, 4, 0, 0)
+	btn.BackgroundTransparency = 1
 	btn.Text = nama
 	btn.Font = Enum.Font.GothamMedium
 	btn.TextColor3 = COLOR_TEXT_MAIN
 	btn.TextSize = 9
 	btn.TextWrapped = true
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-	
-	local stroke = Instance.new("UIStroke", btn)
-	stroke.Color = COLOR_STROKE
-	stroke.Thickness = 1
+
+	local star = Instance.new("TextButton", cell)
+	star.Size = UDim2.new(0, 20, 0, 20)
+	star.Position = UDim2.new(1, -22, 0.5, -10)
+	star.BackgroundTransparency = 1
+	star.Font = Enum.Font.GothamBold
+	star.TextSize = 12
+
+	local function UpdateFavoriteUI()
+		local isFav = favoriteDances[tostring(animID)]
+		if isFav then
+			star.Text = "★"
+			star.TextColor3 = Color3.fromRGB(241, 196, 15) -- Gold
+			cell.LayoutOrder = -1000 + index -- Float to top
+		else
+			star.Text = "☆"
+			star.TextColor3 = Color3.fromRGB(150, 150, 165)
+			cell.LayoutOrder = index
+		end
+	end
+
+	UpdateFavoriteUI()
+
+	star.MouseButton1Click:Connect(function()
+		local id = tostring(animID)
+		favoriteDances[id] = not favoriteDances[id]
+		SaveFavorites()
+		UpdateFavoriteUI()
+	end)
 
 	btn.MouseEnter:Connect(function()
-		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = COLOR_BTN_HOVER}):Play()
+		TweenService:Create(cell, TweenInfo.new(0.2), {BackgroundColor3 = COLOR_BTN_HOVER}):Play()
 	end)
 	btn.MouseLeave:Connect(function()
-		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = COLOR_BTN_BG}):Play()
+		TweenService:Create(cell, TweenInfo.new(0.2), {BackgroundColor3 = COLOR_BTN_BG}):Play()
 	end)
 
 	btn.MouseButton1Click:Connect(function()
@@ -265,10 +339,11 @@ local function CreateDanceButton(nama, animID)
 
 		if currentTrack then currentTrack:Stop(0.2) end
 		if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
+		if leaveConnection then leaveConnection:Disconnect(); leaveConnection = nil end
 		if renderSyncConnection then renderSyncConnection:Disconnect(); renderSyncConnection = nil end
 
 		currentSyncTarget = nil
-		floatingStop.Text = "Stop Animasi" 
+		floatingStop.Text = "Stop Animasi"
 
 		if not trackCache[animID] then
 			local anim = Instance.new("Animation")
@@ -288,8 +363,15 @@ local function CreateDanceButton(nama, animID)
 end
 
 -- Render Item
-for _, data in ipairs(DanceModule.Dances) do CreateDanceButton(data[1], data[2]) end
-for _, data in ipairs(DanceModule.Emotes) do CreateDanceButton(data[1], data[2]) end
+local itemIndex = 1
+for _, data in ipairs(DanceModule.Dances) do 
+	CreateDanceButton(data[1], data[2], itemIndex) 
+	itemIndex += 1
+end
+for _, data in ipairs(DanceModule.Emotes) do 
+	CreateDanceButton(data[1], data[2], itemIndex) 
+	itemIndex += 1
+end
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, math.ceil((#DanceModule.Dances + #DanceModule.Emotes) / 2) * 36)
 
 -- ==========================================

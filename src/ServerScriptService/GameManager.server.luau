@@ -7,6 +7,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
+local DataStoreService = game:GetService("DataStoreService")
 
 -- Module imports
 local Utils = require(ReplicatedStorage:WaitForChild("Utils"))
@@ -14,6 +15,7 @@ local Utils = require(ReplicatedStorage:WaitForChild("Utils"))
 -- Constants
 local MAX_PLAYERS = 50
 local SPAWN_POSITION = Vector3.new(0, 10, 0)
+local ClubDataStore = DataStoreService:GetDataStore("DugemClubDataStore_v1")
 
 -- Player data store (sederhana, untuk contoh)
 local playerData: { [Player]: { joinTime: number, score: number } } = {}
@@ -33,10 +35,25 @@ local function onPlayerAdded(player: Player)
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
 
+	-- Load data dari DataStore
+	local spentVal = 0
+	local favDancesVal = ""
+	
+	local success, savedData = pcall(function()
+		return ClubDataStore:GetAsync(tostring(player.UserId))
+	end)
+	
+	if success and savedData then
+		spentVal = savedData.Spent or 0
+		favDancesVal = savedData.Favorites or ""
+	end
+
 	local spent = Instance.new("IntValue")
 	spent.Name = "Spent"
-	spent.Value = 0 -- initial Robux spent amount
+	spent.Value = spentVal
 	spent.Parent = leaderstats
+
+	player:SetAttribute("DanceFavorites", favDancesVal)
 
 	-- Kirim pesan selamat datang
 	Utils.log(`Pemain {player.Name} berhasil terhubung!`)
@@ -45,6 +62,19 @@ end
 -- Fungsi ketika pemain keluar
 local function onPlayerRemoving(player: Player)
 	print(`[Server] Pemain keluar: {player.Name}`)
+
+	-- Simpan data sebelum keluar
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local spent = leaderstats and leaderstats:FindFirstChild("Spent")
+	local spentVal = spent and spent.Value or 0
+	local favDancesVal = player:GetAttribute("DanceFavorites") or ""
+	
+	pcall(function()
+		ClubDataStore:SetAsync(tostring(player.UserId), {
+			Spent = spentVal,
+			Favorites = favDancesVal
+		})
+	end)
 
 	-- Bersihkan data
 	if playerData[player] then
