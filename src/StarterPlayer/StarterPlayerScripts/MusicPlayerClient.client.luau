@@ -422,6 +422,28 @@ local queueListLayout = Instance.new("UIListLayout", queueScroll)
 queueListLayout.Padding = UDim.new(0, 6)
 queueListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+-- Empty Queue Placeholder
+local emptyPlaceholder = Instance.new("TextLabel", queueScroll)
+emptyPlaceholder.Name = "EmptyPlaceholder"
+emptyPlaceholder.Size = UDim2.new(1, -20, 0, 80)
+emptyPlaceholder.Position = UDim2.new(0, 10, 0, 20)
+emptyPlaceholder.BackgroundTransparency = 1
+emptyPlaceholder.Text = "Antrean kosong.\nTambahkan lagu dari Library!"
+emptyPlaceholder.Font = Enum.Font.GothamSemibold
+emptyPlaceholder.TextColor3 = COLOR_TEXT_DIM
+emptyPlaceholder.TextSize = 11
+emptyPlaceholder.TextWrapped = true
+emptyPlaceholder.Visible = true
+
+-- Vertical Divider Line
+local divider = Instance.new("Frame", viewHome)
+divider.Name = "Divider"
+divider.Size = UDim2.new(0, 1, 1, -20)
+divider.Position = UDim2.new(0.5, 0, 0, 10)
+divider.BackgroundColor3 = COLOR_STROKE
+divider.BorderSizePixel = 0
+divider.BackgroundTransparency = 0.5
+
 -- ================================================================
 -- VIEW 2: LIBRARY VIEW (COLLECTIONS & ALL TRACKS GRID)
 -- ================================================================
@@ -832,6 +854,12 @@ local function syncQueueList(queueList)
 			child:Destroy()
 		end
 	end
+	
+	if #queueList == 0 then
+		emptyPlaceholder.Visible = true
+		return
+	end
+	emptyPlaceholder.Visible = false
 	
 	for idx, qItem in ipairs(queueList) do
 		local card = Instance.new("Frame", queueScroll)
