@@ -78,4 +78,49 @@ danceBtn.MouseButton1Click:Connect(function()
 	toggleEvent:Fire()
 end)
 
-print("[Client] Premium Dark HUD (Dance button only) successfully loaded!")
+-- MUSIC TOGGLE BUTTON
+local musicBtn = Instance.new("TextButton", hudGui)
+musicBtn.Name = "MusicBtn"
+musicBtn.Size = UDim2.new(0, 44, 0, 44)
+musicBtn.Position = UDim2.new(1, -118, 0, 20) -- Left of DanceBtn
+musicBtn.AnchorPoint = Vector2.new(1, 0)
+musicBtn.BackgroundColor3 = COLOR_BG
+musicBtn.Text = "🎵"
+musicBtn.Font = Enum.Font.GothamBold
+musicBtn.TextColor3 = COLOR_TEXT
+musicBtn.TextSize = 20
+
+Instance.new("UICorner", musicBtn).CornerRadius = UDim.new(0, 10)
+local mStroke = Instance.new("UIStroke", musicBtn)
+mStroke.Color = COLOR_STROKE
+mStroke.Thickness = 2
+
+-- Hover & Click animations
+musicBtn.MouseEnter:Connect(function()
+	TweenService:Create(musicBtn, TweenInfo.new(0.2), {BackgroundColor3 = COLOR_HOVER}):Play()
+end)
+
+musicBtn.MouseLeave:Connect(function()
+	TweenService:Create(musicBtn, TweenInfo.new(0.2), {BackgroundColor3 = COLOR_BG}):Play()
+end)
+
+musicBtn.MouseButton1Click:Connect(function()
+	-- Click bounce animation
+	local bounceInfo = TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local shrink = TweenService:Create(musicBtn, bounceInfo, {Size = UDim2.new(0, 38, 0, 38), Position = UDim2.new(1, -115, 0, 23)})
+	local restore = TweenService:Create(musicBtn, bounceInfo, {Size = UDim2.new(0, 44, 0, 44), Position = UDim2.new(1, -118, 0, 20)})
+	
+	shrink:Play()
+	shrink.Completed:Wait()
+	restore:Play()
+
+	local toggleEvent = playerGui:FindFirstChild("ToggleMusicUI")
+	if not toggleEvent then
+		toggleEvent = Instance.new("BindableEvent")
+		toggleEvent.Name = "ToggleMusicUI"
+		toggleEvent.Parent = playerGui
+	end
+	toggleEvent:Fire()
+end)
+
+print("[Client] Premium Dark HUD (Dance & Music buttons) successfully loaded!")

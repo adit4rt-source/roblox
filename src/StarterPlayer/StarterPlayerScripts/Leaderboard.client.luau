@@ -115,7 +115,7 @@ lbList.SortOrder = Enum.SortOrder.LayoutOrder
 -- Format Helper
 local function FormatNumber(n)
 	local formatted = tostring(n)
-	while true do
+	for i = 1, 20 do
 		local k
 		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
 		if k == 0 then break end
@@ -234,7 +234,8 @@ local function BuatPlayerBar(p, spent, rank)
 	return bar
 end
 
-local function UpdateLeaderboard()
+local leaderboardUpdatePending = false
+local function RealUpdateLeaderboard()
 	for _, child in pairs(lbScrolling:GetChildren()) do
 		if child:IsA("Frame") then
 			child:Destroy()
@@ -256,6 +257,15 @@ local function UpdateLeaderboard()
 		local bar = BuatPlayerBar(playerList[i].Player, playerList[i].Spent, i)
 		bar.Parent = lbScrolling
 	end
+end
+
+local function UpdateLeaderboard()
+	if leaderboardUpdatePending then return end
+	leaderboardUpdatePending = true
+	task.defer(function()
+		leaderboardUpdatePending = false
+		RealUpdateLeaderboard()
+	end)
 end
 
 local function ConnectPlayerStats(p)
@@ -285,25 +295,6 @@ Players.PlayerRemoving:Connect(UpdateLeaderboard)
 for _, p in ipairs(Players:GetPlayers()) do
 	ConnectPlayerStats(p)
 end
-
--- Hook local player attribute changed
-player.AttributeChanged:Connect(function(attr)
-	if attr == "PlayerRank" or attr == "PlayerRankColor" then
-		UpdateLeaderboard()
-	end
-end)
-
--- Hook local player stats non-blockingly
-task.spawn(function()
-	local lstats = player:WaitForChild("leaderstats", 15)
-	if lstats then
-		local spentVal = lstats:WaitForChild("Spent", 15)
-		if spentVal then
-			spentVal.Changed:Connect(UpdateLeaderboard)
-			UpdateLeaderboard()
-		end
-	end
-end)
 
 -- Automatic periodic refresh
 task.spawn(function()

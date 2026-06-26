@@ -23,7 +23,8 @@ local module = {}
 
 function module.abreviatenumber(x,decimals)
     local formatted = x
-    while true do  
+    for i = 1, 20 do  
+        local k
         formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
         if (k==0) then
             break
