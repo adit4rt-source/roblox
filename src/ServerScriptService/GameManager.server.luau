@@ -85,7 +85,6 @@ local function updateAllPlayerNametags()
 					nametag.StudsOffset = Vector3.new(0, 2.5, 0)
 					nametag.AlwaysOnTop = true
 					nametag.LightInfluence = 0
-					nametag.BackgroundTransparency = 1
 					
 					local uiListLayout = Instance.new("UIListLayout")
 					uiListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
