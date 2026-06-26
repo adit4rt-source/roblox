@@ -53,25 +53,6 @@ local function onPlayerAdded(player: Player)
 	level.Value = 1 -- starting level
 	level.Parent = leaderstats
 
-	-- Setup JobStats
-	local jobStats = Instance.new("Folder")
-	jobStats.Name = "JobStats"
-	jobStats.Parent = player
-
-	local fishing = Instance.new("IntValue")
-	fishing.Name = "Fishing"
-	fishing.Value = 1
-	fishing.Parent = jobStats
-
-	local mining = Instance.new("IntValue")
-	mining.Name = "Mining"
-	mining.Value = 1
-	mining.Parent = jobStats
-
-	local combat = Instance.new("IntValue")
-	combat.Name = "Combat"
-	combat.Value = 1
-	combat.Parent = jobStats
 
 
 	-- Kirim pesan selamat datang
