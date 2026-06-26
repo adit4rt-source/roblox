@@ -238,11 +238,15 @@ local function UpdateLeaderboard()
 	end
 end
 
+local koinVal = lstats:WaitForChild("Koin")
+local levelVal = lstats:WaitForChild("Level")
+
 UpdateLeaderboard()
 Players.PlayerAdded:Connect(UpdateLeaderboard)
 Players.PlayerRemoving:Connect(UpdateLeaderboard)
-lstats.Koin.Changed:Connect(UpdateLeaderboard)
-lstats.Level.Changed:Connect(UpdateLeaderboard)
+koinVal.Changed:Connect(UpdateLeaderboard)
+levelVal.Changed:Connect(UpdateLeaderboard)
+
 
 -- Automatic periodic refresh
 task.spawn(function()
