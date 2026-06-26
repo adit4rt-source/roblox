@@ -58,4 +58,21 @@ end
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
 
+-- Setup Sync Dance listeners
+local SyncingFolder = ReplicatedStorage:WaitForChild("Syncing")
+local SyncEvent = SyncingFolder:WaitForChild("Sync")
+local UnSyncEvent = SyncingFolder:WaitForChild("UnSync")
+
+SyncEvent.OnServerEvent:Connect(function(player, danceId)
+	if player.Character then
+		player.Character:SetAttribute("CurrentDanceID", tostring(danceId))
+	end
+end)
+
+UnSyncEvent.OnServerEvent:Connect(function(player)
+	if player.Character then
+		player.Character:SetAttribute("CurrentDanceID", nil)
+	end
+end)
+
 print("[Server] GameManager berhasil dimuat!")
