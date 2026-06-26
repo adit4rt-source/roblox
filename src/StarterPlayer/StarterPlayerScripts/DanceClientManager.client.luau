@@ -131,13 +131,99 @@ closeBtn.TextSize = 12
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
 
 local scrollFrame = Instance.new("ScrollingFrame", mainPanel)
-scrollFrame.Size = UDim2.new(1, -15, 1, -50)
-scrollFrame.Position = UDim2.new(0, 8, 0, 40)
+scrollFrame.Size = UDim2.new(1, -15, 1, -80)
+scrollFrame.Position = UDim2.new(0, 8, 0, 68)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 3
 local listLayout = Instance.new("UIGridLayout", scrollFrame)
 listLayout.CellSize = UDim2.new(0.5, -4, 0, 30)
 listLayout.CellPadding = UDim2.new(0, 6, 0, 6) 
+
+local activeTab = "DANCE"
+local allCells = {}
+
+-- TAB CONTAINER
+local tabContainer = Instance.new("Frame", mainPanel)
+tabContainer.Name = "TabContainer"
+tabContainer.Size = UDim2.new(1, -16, 0, 26)
+tabContainer.Position = UDim2.new(0, 8, 0, 35)
+tabContainer.BackgroundTransparency = 1
+
+local tabLayout = Instance.new("UIListLayout", tabContainer)
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Padding = UDim.new(0, 6)
+
+local tabDance = Instance.new("TextButton", tabContainer)
+tabDance.Name = "TabDance"
+tabDance.Size = UDim2.new(0.5, -3, 1, 0)
+tabDance.BackgroundColor3 = COLOR_BTN_BG
+tabDance.Text = "DANCE"
+tabDance.Font = Enum.Font.GothamBold
+tabDance.TextColor3 = COLOR_TEXT_MAIN
+tabDance.TextSize = 10
+Instance.new("UICorner", tabDance).CornerRadius = UDim.new(0, 5)
+local tabDanceStroke = Instance.new("UIStroke", tabDance)
+tabDanceStroke.Color = COLOR_STROKE
+tabDanceStroke.Thickness = 1
+
+local tabFav = Instance.new("TextButton", tabContainer)
+tabFav.Name = "TabFav"
+tabFav.Size = UDim2.new(0.5, -3, 1, 0)
+tabFav.BackgroundColor3 = COLOR_BG
+tabFav.Text = "FAVORIT"
+tabFav.Font = Enum.Font.GothamBold
+tabFav.TextColor3 = Color3.fromRGB(150, 150, 165)
+tabFav.TextSize = 10
+Instance.new("UICorner", tabFav).CornerRadius = UDim.new(0, 5)
+local tabFavStroke = Instance.new("UIStroke", tabFav)
+tabFavStroke.Color = COLOR_STROKE
+tabFavStroke.Thickness = 1
+
+local function UpdateTabVisibility()
+	if activeTab == "DANCE" then
+		tabDance.BackgroundColor3 = COLOR_BTN_BG
+		tabDance.TextColor3 = COLOR_TEXT_MAIN
+		
+		tabFav.BackgroundColor3 = COLOR_BG
+		tabFav.TextColor3 = Color3.fromRGB(150, 150, 165)
+	else
+		tabDance.BackgroundColor3 = COLOR_BG
+		tabDance.TextColor3 = Color3.fromRGB(150, 150, 165)
+		
+		tabFav.BackgroundColor3 = COLOR_BTN_BG
+		tabFav.TextColor3 = COLOR_GOLD
+	end
+
+	for _, item in ipairs(allCells) do
+		local isFav = favoriteDances[tostring(item.AnimID)]
+		if activeTab == "DANCE" then
+			item.Cell.Visible = true
+			if isFav then
+				item.Cell.LayoutOrder = -1000 + item.Index
+			else
+				item.Cell.LayoutOrder = item.Index
+			end
+		else
+			if isFav then
+				item.Cell.Visible = true
+				item.Cell.LayoutOrder = item.Index
+			else
+				item.Cell.Visible = false
+			end
+		end
+	end
+end
+
+tabDance.MouseButton1Click:Connect(function()
+	activeTab = "DANCE"
+	UpdateTabVisibility()
+end)
+
+tabFav.MouseButton1Click:Connect(function()
+	activeTab = "FAV"
+	UpdateTabVisibility()
+end) 
 
 -- ==========================================
 -- SISTEM ANIMASI & SINKRONISASI 100% AKURAT
@@ -315,12 +401,14 @@ local function CreateDanceButton(nama, animID, index)
 	end
 
 	UpdateFavoriteUI()
+	table.insert(allCells, {Cell = cell, AnimID = animID, Index = index})
 
 	star.MouseButton1Click:Connect(function()
 		local id = tostring(animID)
 		favoriteDances[id] = not favoriteDances[id]
 		SaveFavorites()
 		UpdateFavoriteUI()
+		UpdateTabVisibility()
 	end)
 
 	btn.MouseEnter:Connect(function()
