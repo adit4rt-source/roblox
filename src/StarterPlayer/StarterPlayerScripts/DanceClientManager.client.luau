@@ -50,6 +50,7 @@ player:GetAttributeChangedSignal("DanceFavorites"):Connect(LoadFavorites)
 local COLOR_BG = Color3.fromRGB(20, 20, 28)
 local COLOR_STROKE = Color3.fromRGB(44, 44, 60)
 local COLOR_TEXT_MAIN = Color3.fromRGB(245, 245, 250)
+local COLOR_GOLD = Color3.fromRGB(241, 196, 15)
 local COLOR_BTN_BG = Color3.fromRGB(30, 30, 42)
 local COLOR_BTN_HOVER = Color3.fromRGB(38, 38, 54)
 
@@ -405,7 +406,11 @@ local function CreateDanceButton(nama, animID, index)
 
 	star.MouseButton1Click:Connect(function()
 		local id = tostring(animID)
-		favoriteDances[id] = not favoriteDances[id]
+		if favoriteDances[id] then
+			favoriteDances[id] = nil
+		else
+			favoriteDances[id] = true
+		end
 		SaveFavorites()
 		UpdateFavoriteUI()
 		UpdateTabVisibility()
