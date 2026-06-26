@@ -222,6 +222,50 @@ local function updateAllPlayerNametags()
 				
 				band.Parent = nametag
 				
+				-- Render Device + Country Icon row (middle)
+				local iconsFrame = Instance.new("Frame")
+				iconsFrame.Name = "IconsFrame"
+				iconsFrame.Size = UDim2.new(1, 0, 0, 16)
+				iconsFrame.BackgroundTransparency = 1
+				iconsFrame.LayoutOrder = 2
+				
+				local iconsLayout = Instance.new("UIListLayout")
+				iconsLayout.FillDirection = Enum.FillDirection.Horizontal
+				iconsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+				iconsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+				iconsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+				iconsLayout.Padding = UDim.new(0, 6)
+				iconsLayout.Parent = iconsFrame
+				
+				-- Country flag
+				local flagEmoji = p:GetAttribute("CountryFlag") or "🌐"
+				local flagLbl = Instance.new("TextLabel", iconsFrame)
+				flagLbl.Size = UDim2.new(0, 20, 1, 0)
+				flagLbl.BackgroundTransparency = 1
+				flagLbl.Text = flagEmoji
+				flagLbl.Font = Enum.Font.GothamBold
+				flagLbl.TextSize = 12
+				flagLbl.LayoutOrder = 1
+				
+				-- Device icon
+				local deviceType = p:GetAttribute("DeviceType") or "PC"
+				local deviceEmoji = "💻"
+				if deviceType == "Mobile" then
+					deviceEmoji = "📱"
+				elseif deviceType == "Console" then
+					deviceEmoji = "🎮"
+				end
+				
+				local deviceLbl = Instance.new("TextLabel", iconsFrame)
+				deviceLbl.Size = UDim2.new(0, 20, 1, 0)
+				deviceLbl.BackgroundTransparency = 1
+				deviceLbl.Text = deviceEmoji
+				deviceLbl.Font = Enum.Font.GothamBold
+				deviceLbl.TextSize = 12
+				deviceLbl.LayoutOrder = 2
+				
+				iconsFrame.Parent = nametag
+				
 				-- Render NameLabel at the bottom
 				local nameLabel = Instance.new("TextLabel")
 				nameLabel.Name = "NameLabel"
@@ -233,12 +277,31 @@ local function updateAllPlayerNametags()
 				nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 				nameLabel.TextStrokeTransparency = 0.5
 				nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-				nameLabel.Text = p.Name
+				nameLabel.Text = p.DisplayName
 				nameLabel.LayoutOrder = 100 -- Always at bottom
 				nameLabel.Parent = nametag
 			end
 		end
 	end
+end
+
+-- Helper to detect player's country using LocalizationService and convert to flag emoji
+local function getPlayerCountryFlag(player: Player): string
+	local success, code = pcall(function()
+		return LocalizationService:GetCountryRegionForPlayerAsync(player)
+	end)
+	if success and code and #code == 2 then
+		code = string.upper(code)
+		local f1 = code:byte(1) - 65 + 0x1F1E6
+		local f2 = code:byte(2) - 65 + 0x1F1E6
+		local ok, emoji = pcall(function()
+			return utf8.char(f1) .. utf8.char(f2)
+		end)
+		if ok then
+			return emoji
+		end
+	end
+	return "🌐"
 end
 
 -- Fungsi ketika pemain bergabung
@@ -250,6 +313,13 @@ local function onPlayerAdded(player: Player)
 		joinTime = os.time(),
 		score = 0,
 	}
+	
+	-- Fetch country region flag emoji asynchronously
+	task.spawn(function()
+		local flag = getPlayerCountryFlag(player)
+		player:SetAttribute("CountryFlag", flag)
+		updateAllPlayerNametags()
+	end)
 
 	-- Setup leaderstats
 	local leaderstats = Instance.new("Folder")
@@ -375,6 +445,15 @@ SetNametagEvent.OnServerEvent:Connect(function(sender, targetPlayer, customTag)
 			targetPlayer:SetAttribute("CustomNametag", customTag)
 		end
 		print(`[Server] Admin {sender.Name} set {targetPlayer.Name}'s nametag to: {tostring(customTag)}`)
+	end
+end)
+
+-- Device detector listener
+local SetDeviceEvent = Remotes:WaitForChild("SetDeviceEvent")
+SetDeviceEvent.OnServerEvent:Connect(function(player, deviceType)
+	if type(deviceType) == "string" then
+		player:SetAttribute("DeviceType", deviceType)
+		updateAllPlayerNametags()
 	end
 end)
 
