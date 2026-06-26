@@ -47,10 +47,10 @@ end
 LoadFavorites()
 player:GetAttributeChangedSignal("DanceFavorites"):Connect(LoadFavorites)
 
-local COLOR_BG = Color3.fromRGB(20, 20, 28)
-local COLOR_STROKE = Color3.fromRGB(44, 44, 60)
+local COLOR_BG = Color3.fromRGB(15, 15, 24)
+local COLOR_STROKE = Color3.fromRGB(85, 0, 127)
 local COLOR_TEXT_MAIN = Color3.fromRGB(245, 245, 250)
-local COLOR_GOLD = Color3.fromRGB(241, 196, 15)
+local COLOR_GOLD = Color3.fromRGB(255, 215, 0)
 local COLOR_BTN_BG = Color3.fromRGB(30, 30, 42)
 local COLOR_BTN_HOVER = Color3.fromRGB(38, 38, 54)
 
@@ -93,7 +93,8 @@ floatingStop.TextStrokeTransparency = 1
 floatingStop.TextSize = 11
 floatingStop.Parent = gui
 
-Instance.new("UICorner", floatingStop).CornerRadius = UDim.new(0, 8)
+local uiCornerStop = Instance.new("UICorner", floatingStop)
+uiCornerStop.CornerRadius = UDim.new(0, 8)
 local stopStroke = Instance.new("UIStroke", floatingStop)
 stopStroke.Color = COLOR_STROKE
 stopStroke.Thickness = 1.5
@@ -108,7 +109,8 @@ mainPanel.Position = UDim2.new(1, 350, 0, 50)
 mainPanel.AnchorPoint = Vector2.new(1, 0)
 mainPanel.BackgroundColor3 = COLOR_BG
 mainPanel.Parent = gui
-Instance.new("UICorner", mainPanel).CornerRadius = UDim.new(0, 10)
+local panelCorner = Instance.new("UICorner", mainPanel)
+panelCorner.CornerRadius = UDim.new(0, 10)
 local panelStroke = Instance.new("UIStroke", mainPanel)
 panelStroke.Color = COLOR_STROKE
 panelStroke.Thickness = 2
@@ -118,8 +120,15 @@ titleLbl.Size = UDim2.new(1, 0, 0, 35)
 titleLbl.BackgroundTransparency = 1
 titleLbl.Text = "✨ DANCE MENU ✨"
 titleLbl.Font = Enum.Font.GothamBold
-titleLbl.TextColor3 = COLOR_TEXT_MAIN
+titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLbl.TextSize = 12
+
+local titleGradient = Instance.new("UIGradient")
+titleGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 0)), -- Gold
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))   -- Neon Red
+})
+titleGradient.Parent = titleLbl
 
 local closeBtn = Instance.new("TextButton", mainPanel)
 closeBtn.Size = UDim2.new(0, 25, 0, 25)
@@ -129,7 +138,8 @@ closeBtn.Text = "X"
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeBtn.TextSize = 12
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+local closeCorner = Instance.new("UICorner", closeBtn)
+closeCorner.CornerRadius = UDim.new(0, 6)
 
 local scrollFrame = Instance.new("ScrollingFrame", mainPanel)
 scrollFrame.Size = UDim2.new(1, -15, 1, -80)
@@ -143,56 +153,67 @@ listLayout.CellPadding = UDim2.new(0, 6, 0, 6)
 local activeTab = "DANCE"
 local allCells = {}
 
--- TAB CONTAINER
+-- TAB CONTAINER (Pill Design Slot)
 local tabContainer = Instance.new("Frame", mainPanel)
 tabContainer.Name = "TabContainer"
 tabContainer.Size = UDim2.new(1, -16, 0, 26)
 tabContainer.Position = UDim2.new(0, 8, 0, 35)
-tabContainer.BackgroundTransparency = 1
+tabContainer.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+tabContainer.BackgroundTransparency = 0
 
-local tabLayout = Instance.new("UIListLayout", tabContainer)
-tabLayout.FillDirection = Enum.FillDirection.Horizontal
-tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-tabLayout.Padding = UDim.new(0, 6)
+local tabContainerCorner = Instance.new("UICorner", tabContainer)
+tabContainerCorner.CornerRadius = UDim.new(0, 6)
 
+local tabContainerStroke = Instance.new("UIStroke", tabContainer)
+tabContainerStroke.Color = Color3.fromRGB(44, 44, 60)
+tabContainerStroke.Thickness = 1
+
+-- Sliding Pill Highlight
+local tabPill = Instance.new("Frame", tabContainer)
+tabPill.Name = "TabPill"
+tabPill.Size = UDim2.new(0.5, -3, 1, -4)
+tabPill.Position = UDim2.new(0, 2, 0, 2)
+tabPill.BackgroundColor3 = Color3.fromRGB(85, 0, 127)
+tabPill.BorderSizePixel = 0
+
+local tabPillCorner = Instance.new("UICorner", tabPill)
+tabPillCorner.CornerRadius = UDim.new(0, 4)
+
+-- Interactive buttons overlaid on the pill slot
 local tabDance = Instance.new("TextButton", tabContainer)
 tabDance.Name = "TabDance"
-tabDance.Size = UDim2.new(0.5, -3, 1, 0)
-tabDance.BackgroundColor3 = COLOR_BTN_BG
+tabDance.Size = UDim2.new(0.5, 0, 1, 0)
+tabDance.Position = UDim2.new(0, 0, 0, 0)
+tabDance.BackgroundTransparency = 1
 tabDance.Text = "DANCE"
 tabDance.Font = Enum.Font.GothamBold
 tabDance.TextColor3 = COLOR_TEXT_MAIN
 tabDance.TextSize = 10
-Instance.new("UICorner", tabDance).CornerRadius = UDim.new(0, 5)
-local tabDanceStroke = Instance.new("UIStroke", tabDance)
-tabDanceStroke.Color = COLOR_STROKE
-tabDanceStroke.Thickness = 1
+tabDance.ZIndex = 2
 
 local tabFav = Instance.new("TextButton", tabContainer)
 tabFav.Name = "TabFav"
-tabFav.Size = UDim2.new(0.5, -3, 1, 0)
-tabFav.BackgroundColor3 = COLOR_BG
+tabFav.Size = UDim2.new(0.5, 0, 1, 0)
+tabFav.Position = UDim2.new(0.5, 0, 0, 0)
+tabFav.BackgroundTransparency = 1
 tabFav.Text = "FAVORIT"
 tabFav.Font = Enum.Font.GothamBold
 tabFav.TextColor3 = Color3.fromRGB(150, 150, 165)
 tabFav.TextSize = 10
-Instance.new("UICorner", tabFav).CornerRadius = UDim.new(0, 5)
-local tabFavStroke = Instance.new("UIStroke", tabFav)
-tabFavStroke.Color = COLOR_STROKE
-tabFavStroke.Thickness = 1
+tabFav.ZIndex = 2
 
 local function UpdateTabVisibility()
 	if activeTab == "DANCE" then
-		tabDance.BackgroundColor3 = COLOR_BTN_BG
+		TweenService:Create(tabPill, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0, 2, 0, 2)
+		}):Play()
 		tabDance.TextColor3 = COLOR_TEXT_MAIN
-		
-		tabFav.BackgroundColor3 = COLOR_BG
 		tabFav.TextColor3 = Color3.fromRGB(150, 150, 165)
 	else
-		tabDance.BackgroundColor3 = COLOR_BG
+		TweenService:Create(tabPill, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0.5, 1, 0, 2)
+		}):Play()
 		tabDance.TextColor3 = Color3.fromRGB(150, 150, 165)
-		
-		tabFav.BackgroundColor3 = COLOR_BTN_BG
 		tabFav.TextColor3 = COLOR_GOLD
 	end
 

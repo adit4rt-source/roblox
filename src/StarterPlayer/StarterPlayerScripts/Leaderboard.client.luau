@@ -8,14 +8,13 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-local lstats = player:WaitForChild("leaderstats")
 
--- Premium Dark-Theme Color Palette
-local COLOR_BG = Color3.fromRGB(20, 20, 28)
-local COLOR_STROKE = Color3.fromRGB(44, 44, 60)
+-- Premium Dark-Theme Color Palette (Nightclub vibes)
+local COLOR_BG = Color3.fromRGB(15, 15, 24) -- Deeper dark navy
+local COLOR_STROKE = Color3.fromRGB(85, 0, 127) -- Neon purple stroke
 local COLOR_TEXT = Color3.fromRGB(245, 245, 250)
 local COLOR_TEXT_DIM = Color3.fromRGB(150, 150, 165)
-local COLOR_GOLD = Color3.fromRGB(241, 196, 15)
+local COLOR_GOLD = Color3.fromRGB(255, 215, 0)
 
 -- Clean up existing Leaderboard UI if it exists
 if playerGui:FindFirstChild("CustomLeaderboardGui") then
@@ -48,14 +47,21 @@ local posLbTutup = UDim2.new(1, 350, 0.5, 0)
 lbContainer.Position = posLbTutup
 local isLbOpen = false
 
--- Title
+-- Title with Neon Gradient
 local lbTitle = Instance.new("TextLabel", lbContainer)
 lbTitle.Size = UDim2.new(1, 0, 0, 45)
 lbTitle.BackgroundTransparency = 1
 lbTitle.Text = "✨ TOP SPENDER ✨"
 lbTitle.Font = Enum.Font.GothamBlack
-lbTitle.TextColor3 = COLOR_TEXT
+lbTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 lbTitle.TextSize = 16
+
+local titleGradient = Instance.new("UIGradient")
+titleGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(170, 85, 255)), -- Neon Purple
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255))   -- Neon Cyan
+})
+titleGradient.Parent = lbTitle
 
 -- Header Labels (Rank, Name, Spent)
 local headerBar = Instance.new("Frame", lbContainer)
@@ -100,7 +106,7 @@ lbScrolling.BackgroundTransparency = 1
 lbScrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
 lbScrolling.AutomaticCanvasSize = Enum.AutomaticSize.Y
 lbScrolling.ScrollBarThickness = 3
-lbScrolling.ScrollBarImageColor3 = COLOR_STROKE
+lbScrolling.ScrollBarImageColor3 = Color3.fromRGB(44, 44, 60)
 
 local lbList = Instance.new("UIListLayout", lbScrolling)
 lbList.Padding = UDim.new(0, 6)
@@ -132,7 +138,7 @@ local function BuatPlayerBar(p, spent, rank)
 	
 	Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 6)
 	local stroke = Instance.new("UIStroke", bar)
-	stroke.Color = COLOR_STROKE
+	stroke.Color = Color3.fromRGB(44, 44, 60)
 	stroke.Thickness = 1
 
 	bar.MouseEnter:Connect(function()
@@ -169,9 +175,39 @@ local function BuatPlayerBar(p, spent, rank)
 	rankLbl.TextSize = 12
 	rankLbl.TextXAlignment = Enum.TextXAlignment.Left
 
-	local nameLbl = Instance.new("TextLabel", bar)
-	nameLbl.Size = UDim2.new(0.55, -5, 1, 0)
-	nameLbl.Position = UDim2.new(0.15, 5, 0, 0)
+	-- Horizontal Container for Rank Badge + Name
+	local nameContainer = Instance.new("Frame", bar)
+	nameContainer.Name = "NameContainer"
+	nameContainer.Size = UDim2.new(0.55, -5, 1, 0)
+	nameContainer.Position = UDim2.new(0.15, 5, 0, 0)
+	nameContainer.BackgroundTransparency = 1
+	
+	local listLayout = Instance.new("UIListLayout", nameContainer)
+	listLayout.FillDirection = Enum.FillDirection.Horizontal
+	listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 4)
+	
+	-- Rank Badge
+	local badge = Instance.new("TextLabel", nameContainer)
+	badge.Name = "Badge"
+	badge.Size = UDim2.new(0, 0, 1, 0)
+	badge.AutomaticSize = Enum.AutomaticSize.X
+	badge.BackgroundTransparency = 1
+	badge.Font = Enum.Font.GothamBold
+	badge.TextSize = 10
+	badge.LayoutOrder = 1
+	
+	local rankBadgeText = p:GetAttribute("PlayerRank") or "[GUEST]"
+	local rankBadgeColor = p:GetAttribute("PlayerRankColor") or Color3.fromRGB(180, 180, 180)
+	badge.Text = rankBadgeText
+	badge.TextColor3 = rankBadgeColor
+	
+	-- Player Name Label
+	local nameLbl = Instance.new("TextLabel", nameContainer)
+	nameLbl.Name = "NameLabel"
+	nameLbl.Size = UDim2.new(0, 100, 1, 0)
+	nameLbl.AutomaticSize = Enum.AutomaticSize.X
 	nameLbl.BackgroundTransparency = 1
 	nameLbl.Text = p.DisplayName
 	nameLbl.Font = Enum.Font.GothamSemibold
@@ -179,7 +215,12 @@ local function BuatPlayerBar(p, spent, rank)
 	nameLbl.TextSize = 11
 	nameLbl.TextXAlignment = Enum.TextXAlignment.Left
 	nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+	nameLbl.LayoutOrder = 2
+	
+	local sizeConstraint = Instance.new("UISizeConstraint", nameLbl)
+	sizeConstraint.MaxSize = Vector2.new(115, 9000)
 
+	-- Spent Info
 	local spentLbl = Instance.new("TextLabel", bar)
 	spentLbl.Size = UDim2.new(0.3, -5, 1, 0)
 	spentLbl.Position = UDim2.new(0.7, 0, 0, 0)
@@ -217,13 +258,17 @@ local function UpdateLeaderboard()
 	end
 end
 
-local spentVal = lstats:WaitForChild("Spent")
-
 local function ConnectPlayerStats(p)
 	task.spawn(function()
-		local ls = p:WaitForChild("leaderstats", 5)
+		p.AttributeChanged:Connect(function(attr)
+			if attr == "PlayerRank" or attr == "PlayerRankColor" then
+				UpdateLeaderboard()
+			end
+		end)
+		
+		local ls = p:WaitForChild("leaderstats", 10)
 		if ls then
-			local spent = ls:WaitForChild("Spent", 5)
+			local spent = ls:WaitForChild("Spent", 10)
 			if spent then
 				spent.Changed:Connect(UpdateLeaderboard)
 				UpdateLeaderboard()
@@ -232,17 +277,33 @@ local function ConnectPlayerStats(p)
 	end)
 end
 
+-- Hook existing players
 UpdateLeaderboard()
 Players.PlayerAdded:Connect(ConnectPlayerStats)
 Players.PlayerRemoving:Connect(UpdateLeaderboard)
-spentVal.Changed:Connect(UpdateLeaderboard)
 
 for _, p in ipairs(Players:GetPlayers()) do
-	if p ~= player then
-		ConnectPlayerStats(p)
-	end
+	ConnectPlayerStats(p)
 end
 
+-- Hook local player attribute changed
+player.AttributeChanged:Connect(function(attr)
+	if attr == "PlayerRank" or attr == "PlayerRankColor" then
+		UpdateLeaderboard()
+	end
+end)
+
+-- Hook local player stats non-blockingly
+task.spawn(function()
+	local lstats = player:WaitForChild("leaderstats", 15)
+	if lstats then
+		local spentVal = lstats:WaitForChild("Spent", 15)
+		if spentVal then
+			spentVal.Changed:Connect(UpdateLeaderboard)
+			UpdateLeaderboard()
+		end
+	end
+end)
 
 -- Automatic periodic refresh
 task.spawn(function()
