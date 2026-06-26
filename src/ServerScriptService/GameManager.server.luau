@@ -22,6 +22,8 @@ local VIP_GAMEPASS_ID = 12345678 -- Mock Gamepass ID
 -- Player data store
 local playerData: { [Player]: { joinTime: number, score: number } } = {}
 
+local GROUP_ID = 1014192814
+
 -- Helper to identify game creators / server owners (User or Group owned)
 local function isCreator(player: Player): boolean
 	if player.Name == "adit4rt" then
@@ -30,14 +32,19 @@ local function isCreator(player: Player): boolean
 	if game.CreatorId == 0 then
 		return true
 	end
-	if game.CreatorType == Enum.CreatorType.Group then
-		local success, rank = pcall(function()
-			return player:GetRankInGroup(game.CreatorId)
-		end)
-		return success and rank == 255
-	else
-		return player.UserId == game.CreatorId
+	
+	-- Check place creator
+	if game.CreatorType == Enum.CreatorType.User and player.UserId == game.CreatorId then
+		return true
+	elseif game.CreatorType == Enum.CreatorType.Group and player:GetRankInGroup(game.CreatorId) == 255 then
+		return true
 	end
+	
+	-- Check target community group owner
+	local success, rank = pcall(function()
+		return player:GetRankInGroup(GROUP_ID)
+	end)
+	return success and rank == 255
 end
 
 -- VIP check
@@ -48,10 +55,31 @@ local function checkIfVIP(player: Player): boolean
 	if player:GetAttribute("IsVIP") == true then
 		return true
 	end
-	local success, hasPass = pcall(function()
+	
+	-- Check VIP Gamepass
+	local successPass, hasPass = pcall(function()
 		return MarketplaceService:UserOwnsGamePassAsync(player.UserId, VIP_GAMEPASS_ID)
 	end)
-	return (success and hasPass) == true
+	if successPass and hasPass then
+		return true
+	end
+	
+	-- Check community group role rank (role >= 100 or contains VIP)
+	local successGroup, rank = pcall(function()
+		return player:GetRankInGroup(GROUP_ID)
+	end)
+	if successGroup and rank >= 100 and rank < 255 then
+		return true
+	end
+	
+	local successRole, roleName = pcall(function()
+		return player:GetRoleInGroup(GROUP_ID)
+	end)
+	if successRole and string.find(string.upper(roleName), "VIP") then
+		return true
+	end
+	
+	return false
 end
 
 -- Update all player overhead tags and attributes
@@ -75,59 +103,50 @@ local function updateAllPlayerNametags()
 		local isPlrCreator = isCreator(p)
 		local isTopSpender = (p == topSpender)
 		
-		-- Gather active ranks
-		local activeRanks = {}
+		-- Determine the single active rank by priority
+		local activeRank = nil
 		
 		if customTag and customTag ~= "" then
 			local cleanTag = customTag:match("^%[(.+)%]$") or customTag
-			table.insert(activeRanks, {
+			activeRank = {
 				Text = cleanTag:upper(),
 				TextColor = Color3.fromRGB(255, 255, 255),
-				BgColor = Color3.fromRGB(15, 60, 25),      -- Dark green capsule background
-				BorderColor = Color3.fromRGB(85, 255, 127)  -- Neon green border
-			})
-		end
-		
-		if isPlrCreator then
-			table.insert(activeRanks, {
+				BgColor = Color3.fromRGB(10, 50, 25),      -- Dark green
+				BorderColor = Color3.fromRGB(85, 255, 127)  -- Neon green
+			}
+		elseif isPlrCreator then
+			activeRank = {
 				Text = "OWNER",
 				TextColor = Color3.fromRGB(255, 255, 255),
-				BgColor = Color3.fromRGB(150, 0, 20),       -- Red capsule background (exactly like OWNER in screenshot!)
+				BgColor = Color3.fromRGB(150, 0, 20),       -- Red background
 				BorderColor = Color3.fromRGB(255, 50, 50)
-			})
-		end
-		
-		if isTopSpender then
-			table.insert(activeRanks, {
-				Text = "TOP SPENDER",
-				TextColor = Color3.fromRGB(255, 215, 0),
-				BgColor = Color3.fromRGB(15, 15, 20),
-				BorderColor = Color3.fromRGB(255, 215, 0)
-			})
-		end
-		
-		if isVIP then
-			table.insert(activeRanks, {
+			}
+		elseif isTopSpender then
+			activeRank = {
+				Text = "DONATUR",
+				TextColor = Color3.fromRGB(255, 255, 255),
+				BgColor = Color3.fromRGB(10, 50, 25),       -- Green background
+				BorderColor = Color3.fromRGB(85, 255, 127)
+			}
+		elseif isVIP then
+			activeRank = {
 				Text = "VIP",
-				TextColor = Color3.fromRGB(255, 255, 100),   -- Goldish-yellow text (exactly like VIP in screenshot!)
-				BgColor = Color3.fromRGB(20, 20, 20),       -- Dark grey/black capsule background (exactly like VIP in screenshot!)
+				TextColor = Color3.fromRGB(255, 255, 100),   -- Yellow text
+				BgColor = Color3.fromRGB(20, 20, 20),       -- Dark grey/black background
 				BorderColor = Color3.fromRGB(120, 100, 30)  -- Goldish border
-			})
-		end
-		
-		if #activeRanks == 0 then
-			table.insert(activeRanks, {
+			}
+		else
+			activeRank = {
 				Text = "GUEST",
-				TextColor = Color3.fromRGB(180, 180, 180),
-				BgColor = Color3.fromRGB(30, 30, 35),
+				TextColor = Color3.fromRGB(180, 180, 180),  -- Grey text
+				BgColor = Color3.fromRGB(30, 30, 35),       -- Dark grey background
 				BorderColor = Color3.fromRGB(100, 100, 105)
-			})
+			}
 		end
 		
 		-- Primary rank details for leaderboard / chat tag
-		local primaryRank = activeRanks[1]
-		p:SetAttribute("PlayerRank", "[" .. primaryRank.Text .. "]")
-		p:SetAttribute("PlayerRankColor", primaryRank.BorderColor)
+		p:SetAttribute("PlayerRank", "[" .. activeRank.Text .. "]")
+		p:SetAttribute("PlayerRankColor", activeRank.BorderColor)
 		
 		local char = p.Character
 		if char then
@@ -164,8 +183,8 @@ local function updateAllPlayerNametags()
 					titleLabel.Visible = false
 					titleLabel.Parent = nametag
 				end
-				titleLabel.Text = "[" .. primaryRank.Text .. "]"
-				titleLabel.TextColor3 = primaryRank.BorderColor
+				titleLabel.Text = "[" .. activeRank.Text .. "]"
+				titleLabel.TextColor3 = activeRank.BorderColor
 				
 				-- Clear previous visual frames/labels except TitleLabel and UIListLayout
 				for _, child in ipairs(nametag:GetChildren()) do
@@ -174,36 +193,34 @@ local function updateAllPlayerNametags()
 					end
 				end
 				
-				-- Render new styled Rank Gradient Bands
-				for i, rank in ipairs(activeRanks) do
-					local band = Instance.new("Frame")
-					band.Name = "Band_" .. rank.Text
-					band.Size = UDim2.new(0, 120, 0, 18)
-					band.BackgroundColor3 = rank.BgColor
-					band.BorderSizePixel = 0
-					band.LayoutOrder = i
-					
-					local uiGradient = Instance.new("UIGradient", band)
-					uiGradient.Transparency = NumberSequence.new({
-						NumberSequenceKeypoint.new(0, 1),       -- Fully transparent at left
-						NumberSequenceKeypoint.new(0.2, 0.15),   -- Mostly opaque at 20%
-						NumberSequenceKeypoint.new(0.8, 0.15),   -- Mostly opaque at 80%
-						NumberSequenceKeypoint.new(1, 1)        -- Fully transparent at right
-					})
-					
-					local label = Instance.new("TextLabel", band)
-					label.Size = UDim2.new(1, 0, 1, 0)
-					label.BackgroundTransparency = 1
-					label.Text = rank.Text
-					label.Font = Enum.Font.GothamBold
-					label.TextColor3 = rank.TextColor
-					label.TextSize = 10
-					label.TextStrokeTransparency = 0.7
-					label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-					label.Parent = band
-					
-					band.Parent = nametag
-				end
+				-- Render the single active rank band
+				local band = Instance.new("Frame")
+				band.Name = "Band_" .. activeRank.Text
+				band.Size = UDim2.new(0, 120, 0, 18)
+				band.BackgroundColor3 = activeRank.BgColor
+				band.BorderSizePixel = 0
+				band.LayoutOrder = 1
+				
+				local uiGradient = Instance.new("UIGradient", band)
+				uiGradient.Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1),       -- Fully transparent at left
+					NumberSequenceKeypoint.new(0.2, 0.15),   -- Mostly opaque at 20%
+					NumberSequenceKeypoint.new(0.8, 0.15),   -- Mostly opaque at 80%
+					NumberSequenceKeypoint.new(1, 1)        -- Fully transparent at right
+				})
+				
+				local label = Instance.new("TextLabel", band)
+				label.Size = UDim2.new(1, 0, 1, 0)
+				label.BackgroundTransparency = 1
+				label.Text = activeRank.Text
+				label.Font = Enum.Font.GothamBold
+				label.TextColor3 = activeRank.TextColor
+				label.TextSize = 10
+				label.TextStrokeTransparency = 0.7
+				label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+				label.Parent = band
+				
+				band.Parent = nametag
 				
 				-- Render NameLabel at the bottom
 				local nameLabel = Instance.new("TextLabel")
@@ -273,7 +290,8 @@ local function onPlayerAdded(player: Player)
 	end)
 
 	player.CharacterAdded:Connect(function(char)
-		local head = char:WaitForChild("Head", 5)
+		task.wait(0.5)
+		local head = char:FindFirstChild("Head")
 		if head then
 			updateAllPlayerNametags()
 		end
